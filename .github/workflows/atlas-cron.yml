@@ -1,0 +1,132 @@
+name: ATLAS Scheduler
+
+on:
+  schedule:
+    # ──────────────────────────────────────────────────────────────────────────
+    # All times in UTC. Copenhagen is UTC+2 (CEST, summer) / UTC+1 (CET, winter).
+    # These are calibrated for CEST (summer, April–October). Adjust by 1 hour
+    # when DST ends in late October.
+    # ──────────────────────────────────────────────────────────────────────────
+
+    # Tier 1 — Every 60 min, 5am–8pm UTC (= 7am–10pm CEST), Mon–Sat
+    - cron: "0 5 * * 1-6"   # 7am CEST
+    - cron: "0 6 * * 1-6"   # 8am CEST
+    - cron: "0 7 * * 1-6"   # 9am CEST
+    - cron: "0 8 * * 1-6"   # 10am CEST
+    - cron: "0 9 * * 1-6"   # 11am CEST
+    - cron: "0 10 * * 1-6"  # 12pm CEST
+    - cron: "0 11 * * 1-6"  # 1pm CEST
+    - cron: "0 12 * * 1-6"  # 2pm CEST
+    - cron: "0 13 * * 1-6"  # 3pm CEST
+    - cron: "0 14 * * 1-6"  # 4pm CEST
+    - cron: "0 15 * * 1-6"  # 5pm CEST
+    - cron: "0 16 * * 1-6"  # 6pm CEST
+    - cron: "0 17 * * 1-6"  # 7pm CEST
+    - cron: "0 18 * * 1-6"  # 8pm CEST
+    - cron: "0 19 * * 1-6"  # 9pm CEST
+    - cron: "0 20 * * 1-6"  # 10pm CEST
+
+    # Tier 2 — 6:30am UTC (= 8:30am CEST), Mon–Sat
+    - cron: "30 6 * * 1-6"
+
+    # Tier 3 — 6pm UTC (= 8pm CEST), Sunday only
+    - cron: "0 18 * * 0"
+
+    # Heartbeat — Every 4 hours, every day
+    - cron: "0 6,10,14,18 * * *"
+
+  workflow_dispatch:
+    inputs:
+      tier:
+        description: "Which tier to trigger manually (tier1, tier2, tier3, heartbeat)"
+        required: true
+        type: choice
+        options:
+          - tier1
+          - tier2
+          - tier3
+          - heartbeat
+
+jobs:
+  determine-tier:
+    runs-on: ubuntu-latest
+    outputs:
+      tier: ${{ steps.detect.outputs.tier }}
+    steps:
+      - name: Detect which tier to run
+        id: detect
+        run: |
+          # Manual dispatch takes priority
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tier=${{ inputs.tier }}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          HOUR=$(date -u +%H)
+          MINUTE=$(date -u +%M)
+          DOW=$(date -u +%u)  # 1=Mon, 7=Sun
+
+          # Tier 3: Sunday 6pm UTC
+          if [ "$DOW" = "7" ] && [ "$HOUR" = "18" ] && [ "$MINUTE" = "00" ]; then
+            echo "tier=tier3" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Tier 2: 6:30am UTC Mon-Sat
+          if [ "$DOW" != "7" ] && [ "$HOUR" = "06" ] && [ "$MINUTE" = "30" ]; then
+            echo "tier=tier2" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Heartbeat: 6am, 10am, 14pm, 18pm UTC (any day, :00 minute)
+          if [ "$MINUTE" = "00" ] && ([ "$HOUR" = "06" ] || [ "$HOUR" = "10" ] || [ "$HOUR" = "14" ] || [ "$HOUR" = "18" ]); then
+            echo "tier=heartbeat" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Default: Tier 1 (all other Mon-Sat hourly runs)
+          if [ "$DOW" != "7" ]; then
+            echo "tier=tier1" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Sunday non-Tier3: skip
+          echo "tier=skip" >> $GITHUB_OUTPUT
+
+  run-atlas:
+    runs-on: ubuntu-latest
+    needs: determine-tier
+    if: needs.determine-tier.outputs.tier != 'skip'
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install anthropic requests
+
+      - name: Run ATLAS
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          TIER: ${{ needs.determine-tier.outputs.tier }}
+          ATLAS_ENVIRONMENT_ID: ${{ secrets.ATLAS_ENVIRONMENT_ID }}
+          ATLAS_TIER1_AGENT_ID: ${{ secrets.ATLAS_TIER1_AGENT_ID }}
+          ATLAS_TIER2_AGENT_ID: ${{ secrets.ATLAS_TIER2_AGENT_ID }}
+          ATLAS_TIER3_AGENT_ID: ${{ secrets.ATLAS_TIER3_AGENT_ID }}
+          ATLAS_HEARTBEAT_AGENT_ID: ${{ secrets.ATLAS_HEARTBEAT_AGENT_ID }}
+          NOTION_API_TOKEN: ${{ secrets.NOTION_API_TOKEN }}
+          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
+          SLACK_USER_CHRISTIAN: ${{ secrets.SLACK_USER_CHRISTIAN }}
+          SLACK_USER_VICTOR: ${{ secrets.SLACK_USER_VICTOR }}
+          SLACK_USER_MATHIAS: ${{ secrets.SLACK_USER_MATHIAS }}
+          SLACK_USER_NICOLAI: ${{ secrets.SLACK_USER_NICOLAI }}
+          DRY_RUN: ${{ secrets.DRY_RUN }}
+          GITHUB_RUN_ID: ${{ github.run_id }}
+        run: |
+          echo "Triggering ATLAS $TIER"
+          python triggers/${TIER}.py

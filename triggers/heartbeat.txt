@@ -1,0 +1,1 @@
+Run ATLAS Heartbeat — system health check. Verify Notion API connectivity. Verify Slack connectivity. Post status to #atlas-curator-log. This is a scheduled health check triggered by GitHub Actions every 4 hours.
