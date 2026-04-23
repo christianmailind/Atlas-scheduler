@@ -7,7 +7,8 @@ on:
     # These are calibrated for CEST (summer, April–October). Adjust by 1 hour
     # when DST ends in late October.
     #
-    # Weekdays only (Mon–Fri). Tier 3 is manual-only (workflow_dispatch).
+    # Tier 3 runs automatically Sunday 8pm CEST (6pm UTC). Can also be triggered
+    # manually via workflow_dispatch.
     # ──────────────────────────────────────────────────────────────────────────
 
     # Tier 1 — Every 60 min, 5am–8pm UTC (= 7am–10pm CEST), Mon–Fri
@@ -33,6 +34,9 @@ on:
 
     # Heartbeat — Every 4 hours, Mon–Fri
     - cron: "0 6,10,14,18 * * 1-5"
+
+    # Tier 3 — Sunday 8pm CEST (6pm UTC)
+    - cron: "0 18 * * 0"
 
   workflow_dispatch:
     inputs:
@@ -63,6 +67,13 @@ jobs:
 
           HOUR=$(date -u +%H)
           MINUTE=$(date -u +%M)
+          DOW=$(date -u +%u)  # 1=Mon ... 7=Sun
+
+          # Tier 3: Sunday 6pm UTC (8pm CEST)
+          if [ "$DOW" = "7" ] && [ "$HOUR" = "18" ] && [ "$MINUTE" = "00" ]; then
+            echo "tier=tier3" >> $GITHUB_OUTPUT
+            exit 0
+          fi
 
           # Tier 2: 6:30am UTC Mon-Fri
           if [ "$HOUR" = "06" ] && [ "$MINUTE" = "30" ]; then
