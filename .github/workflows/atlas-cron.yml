@@ -7,11 +7,11 @@ on:
     # These are calibrated for CEST (summer, April–October). Adjust by 1 hour
     # when DST ends in late October.
     #
-    # Tier 3 runs automatically Sunday 8pm CEST (6pm UTC). Can also be triggered
+    # Analyst runs automatically Sunday 8pm CEST (6pm UTC). Can also be triggered
     # manually via workflow_dispatch.
     # ──────────────────────────────────────────────────────────────────────────
 
-    # Tier 1 — Every 60 min, 5am–8pm UTC (= 7am–10pm CEST), Mon–Fri
+    # Watcher — Every 60 min, 5am–8pm UTC (= 7am–10pm CEST), Mon–Fri
     - cron: "0 5 * * 1-5"   # 7am CEST
     - cron: "0 6 * * 1-5"   # 8am CEST
     - cron: "0 7 * * 1-5"   # 9am CEST
@@ -29,13 +29,13 @@ on:
     - cron: "0 19 * * 1-5"  # 9pm CEST
     - cron: "0 20 * * 1-5"  # 10pm CEST
 
-    # Tier 2 — 6:30am UTC (= 8:30am CEST), Mon–Fri
+    # Briefer — 6:30am UTC (= 8:30am CEST), Mon–Fri
     - cron: "30 6 * * 1-5"
 
     # Heartbeat — Every 4 hours, Mon–Fri
     - cron: "0 6,10,14,18 * * 1-5"
 
-    # Tier 3 — Sunday 8pm CEST (6pm UTC)
+    # Analyst — Sunday 8pm CEST (6pm UTC)
     - cron: "0 18 * * 0"
 
   workflow_dispatch:
@@ -69,13 +69,13 @@ jobs:
           MINUTE=$(date -u +%M)
           DOW=$(date -u +%u)  # 1=Mon ... 7=Sun
 
-          # Tier 3: Sunday 6pm UTC (8pm CEST)
+          # Analyst: Sunday 6pm UTC (8pm CEST)
           if [ "$DOW" = "7" ] && [ "$HOUR" = "18" ] && [ "$MINUTE" = "00" ]; then
             echo "tier=tier3" >> $GITHUB_OUTPUT
             exit 0
           fi
 
-          # Tier 2: 6:30am UTC Mon-Fri
+          # Briefer: 6:30am UTC Mon-Fri
           if [ "$HOUR" = "06" ] && [ "$MINUTE" = "30" ]; then
             echo "tier=tier2" >> $GITHUB_OUTPUT
             exit 0
@@ -87,7 +87,7 @@ jobs:
             exit 0
           fi
 
-          # Default: Tier 1 (all other hourly runs)
+          # Default: Watcher (all other hourly runs)
           echo "tier=tier1" >> $GITHUB_OUTPUT
 
   run-atlas:
