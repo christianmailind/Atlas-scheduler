@@ -1,1 +1,1 @@
-Run ATLAS Tier 1 — Urgent Processor. Process Slack messages from the last 60 minutes across all monitored channels. Apply curator rules. Update Notion state. This is a scheduled run triggered by GitHub Actions.
+Run ATLAS Watcher — Urgent Processor. Process Slack messages from the last 60 minutes across all monitored channels. Apply curator rules. Update Notion state. This is a scheduled run triggered by GitHub Actions.
