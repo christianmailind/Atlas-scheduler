@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ATLAS Tier 3 Trigger — Weekly Deep Synthesis
+ATLAS Analyst Trigger — Weekly Deep Synthesis
 Runs Sunday 8pm (CEST).
 Pattern-level analysis: cross-partner insight transfer, decision tracking,
 brain dump pattern detection, capacity analysis, client health scoring,
@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "lib"))
 from tool_handler import run_agent_session
 
 TRIGGER_MESSAGE = """\
-Run ATLAS Tier 3 — Weekly Deep Synthesis.
+Run ATLAS Analyst — Weekly Deep Synthesis.
 
 Perform full pattern-level analysis of the past week as defined in your system prompt:
 1. Cross-partner insight transfer (what one team member learned that others need)
