@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-ATLAS Tier 2 Trigger — Daily Synthesis
+ATLAS Briefer Trigger — Daily Synthesis
 Runs 8:30am Mon-Sat (CEST).
-Processes #leap-eod, #brain-dump, deferred Tier 1 events, Fathom summaries.
+Processes #leap-eod, #brain-dump, deferred Watcher events, Fathom summaries.
 Generates 4 team briefs and sends morning DMs at 8:35am.
 """
 
@@ -14,19 +14,19 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "lib"))
 from tool_handler import run_agent_session
 
 TRIGGER_MESSAGE = """\
-Run ATLAS Tier 2 — Daily Synthesis.
+Run ATLAS Briefer — Daily Synthesis.
 
-Process everything from the last 24 hours that Tier 1 did not handle:
+Process everything from the last 24 hours that Watcher did not handle:
 - #leap-eod posts from yesterday
 - #brain-dump content from yesterday
-- Any deferred events from Tier 1 (marked as deferred in the Changelog)
-- Fathom meeting summaries (if any)
+- Any deferred events from Watcher (marked as deferred in the Changelog)
+- Fathom meeting summaries from #atlas-fathom (if any)
 
-Generate comprehensive briefs for all four team members (Christian, Victor, Mathias, Nicolai).
+Generate updated daily briefs for all four team members (Christian, Victor, Mathias, Nicolai).
 Write each brief to their respective Notion brief pages.
 Send morning DMs to all four team members via Slack at the end.
+Post end-of-run status line to #atlas-curator-log.
 
-Log all actions (or dry-run simulations) to #atlas-curator-log.
 This is a scheduled run triggered by GitHub Actions.
 """
 
