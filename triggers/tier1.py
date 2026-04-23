@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ATLAS Tier 1 Trigger — Urgent Processor
+ATLAS Watcher Trigger — Urgent Processor
 Runs every 60 min, 7am-10pm Mon-Sat (CEST).
 Processes #claude-sync session-end posts, decisions, tasks, blockers.
 """
@@ -13,12 +13,12 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "lib"))
 from tool_handler import run_agent_session
 
 TRIGGER_MESSAGE = """\
-Run ATLAS Tier 1 — Urgent Processor.
+Run ATLAS Watcher — Urgent Processor.
 
 Process Slack messages from the last 60 minutes across all monitored channels.
 Apply curator rules as defined in your system prompt.
 Update Notion state for any events that pass the confidence threshold.
-Log all actions (or dry-run simulations) to #atlas-curator-log.
+Post end-of-run status line to #atlas-curator-log.
 
 This is a scheduled run triggered by GitHub Actions.
 """
